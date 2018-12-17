@@ -19,7 +19,7 @@ def dot_product(x, kernel):
         return K.squeeze(K.dot(x, K.expand_dims(kernel)), axis=-1)
     else:
         return K.dot(x, kernel)
-    
+
 
 class NADE(Layer):
     """
@@ -37,7 +37,7 @@ class NADE(Layer):
 
         self.init = initializers.get('uniform')
 
-    
+
         self.bias = bias
         self.activation = activation
         self.hidden_dim = hidden_dim
@@ -64,13 +64,11 @@ class NADE(Layer):
                                      name='{}_c'.format(self.name),
                                      regularizer=self.c_regularizer)
 
-
         if self.bias:
             self.b = self.add_weight(shape=(self.input_dim1,self.input_dim2),
                                      initializer=self.init,
                                      name='{}_b'.format(self.name),
                                      regularizer=self.b_regularizer)
-
 
         self.V = self.add_weight(shape=(self.hidden_dim,self.input_dim1,self.input_dim2),
                                  initializer=self.init,
@@ -78,7 +76,6 @@ class NADE(Layer):
                                  regularizer=self.V_regularizer)
 
         super(NADE, self).build(input_shape)
-
 
     def call(self, x):
 
@@ -90,7 +87,7 @@ class NADE(Layer):
             output_ = tf.tensordot(x, self.W, axes=[[1, 2], [0, 1]]) + self.c
         else:
             output_ = tf.tensordot(x, self.W, axes=[[1, 2], [0, 1]])
-        h_out = tf.reshape(output_, [-1,self.hidden_dim])
+        h_out = tf.reshape(output_, [-1, self.hidden_dim])
         #tf.cast(indices, tf.float32)
         # output_.shape = (?,500)
 
@@ -103,10 +100,8 @@ class NADE(Layer):
         else:
             output = tf.tensordot(h_out_act, self.V, axes=[[1], [0]])
         # output.shape = (?,6040,5)
-        output = tf.reshape(output, [-1,self.input_dim1,self.input_dim2])
+        output = tf.reshape(output, [-1, self.input_dim1, self.input_dim2])
         return output
 
-
-
     def compute_output_shape(self, input_shape):
-        return (input_shape[0],input_shape[1],input_shape[2])
+        return (input_shape[0], input_shape[1], input_shape[2])

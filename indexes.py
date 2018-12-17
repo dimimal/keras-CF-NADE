@@ -69,22 +69,22 @@ def load_indexes():
                 user_index: A dictionary with the user -> userID index.
                 inv_doc_index: A dictionary with the docID -> doc index.
                 inv_user_index: A dictionary with the userID -> user index.
-        """
+    """
 
-        with open(DATA_PATH, 'doc_index.json') as json_file:
-            json_string = json_file.read()
-                doc_index = json.loads(json_string)
-                doc_index = dict([int(k), int(v)] for k,v in doc_index.items())
+    with open(DATA_PATH, 'doc_index.json') as json_file:
+        json_string = json_file.read()
+        doc_index = json.loads(json_string)
+        doc_index = dict([int(k), int(v)] for k,v in doc_index.items())
 
-        with open(DATA_PATH, 'user_index.json') as json_file:
-            json_string = json_file.read()
-                user_index = json.loads(json_string)
-                user_index = dict([int(k), int(v)] for k,v in user_index.items())
+    with open(DATA_PATH, 'user_index.json') as json_file:
+        json_string = json_file.read()
+        user_index = json.loads(json_string)
+        user_index = dict([int(k), int(v)] for k,v in user_index.items())
 
-        inv_doc_index = {v: k for k, v in doc_index.iteritems()}
-        inv_user_index = {v: k for k, v in user_index.iteritems()}
+    inv_doc_index = {v: k for k, v in doc_index.iteritems()}
+    inv_user_index = {v: k for k, v in user_index.iteritems()}
 
-        return doc_index, user_index, inv_doc_index, inv_user_index
+    return doc_index, user_index, inv_doc_index, inv_user_index
 
 
 def map_recommendations(

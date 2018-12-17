@@ -26,17 +26,12 @@ def read_data(sc, data_file, delimiter='::'):
     """
 
     data = sc.textFile(data_file)
+    print(data.first())
     header = data.first()
     ui_mat_rdd = data.filter(lambda row: row != header).map(
             lambda x: (int(x.split(delimiter)[0]), int(x.split(delimiter)[1]), float(x.split(delimiter)[2])))
 
     return ui_mat_rdd
-
-
-
-
-
-
 
 
 if __name__ == "__main__":
@@ -55,8 +50,6 @@ if __name__ == "__main__":
     b_didx = sc.broadcast(doc_index)
 
     ui_mat_rdd = ui_mat_rdd.map(lambda (usrId, docId, value): (b_uidx.value[usrId],b_didx.value[docId],value))
-
-
 
     num_users = ui_mat_rdd.map(lambda (usrId,docId,value): usrId) \
             .distinct() \
