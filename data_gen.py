@@ -2,14 +2,8 @@ import numpy as np
 import re
 import os
 import json
-import threading
 import random
 from itertools import islice
-
-from sklearn.preprocessing import MultiLabelBinarizer
-
-from keras.preprocessing import sequence
-from keras.utils.np_utils import to_categorical
 import keras.callbacks
 
 
@@ -28,7 +22,8 @@ class DataSet(keras.callbacks.Callback):
 
         """
         """
-
+        print(mode)
+        print(file_list)
         self.flist = file_list
         self.num_users = num_users
         self.num_items = num_items
@@ -40,7 +35,6 @@ class DataSet(keras.callbacks.Callback):
         """
             Computes and returns the number of samples in the corpus.
         """
-
         line_count = 0
         for dfile in self.flist:
             with open(dfile) as f:
@@ -56,8 +50,10 @@ class DataSet(keras.callbacks.Callback):
         """
         """
         iter_cnt = 0
+        print(self.flist)
         while True:
             for dfile in self.flist:
+                print(dfile)
                 with open(dfile) as df:
                     while True:
                         next_n_data_lines = list(islice(df, self.batch_size))
@@ -65,13 +61,17 @@ class DataSet(keras.callbacks.Callback):
                         if not next_n_data_lines:
                             break
 
-                        self.input_ranking_vectors = np.zeros((self.batch_size, self.num_users, 5),
+                        self.input_ranking_vectors = np.zeros(
+                                (self.batch_size, self.num_users, 5),
                                 dtype='int8')
-                        self.output_ranking_vectors = np.zeros((self.batch_size, self.num_users, 5),
+                        self.output_ranking_vectors = np.zeros(
+                                (self.batch_size, self.num_users, 5),
                                 dtype='int8')
-                        self.input_mask_vectors = np.zeros((self.batch_size, self.num_users),
+                        self.input_mask_vectors = np.zeros(
+                                (self.batch_size, self.num_users),
                                 dtype='int8')
-                        self.output_mask_vectors = np.zeros((self.batch_size, self.num_users),
+                        self.output_mask_vectors = np.zeros(
+                                (self.batch_size, self.num_users),
                                 dtype='int8')
 
                         for i, line in enumerate(next_n_data_lines):
@@ -100,9 +100,9 @@ class DataSet(keras.callbacks.Callback):
                                     shuffle_list = list(zip(user_ids, values))
                                     random.shuffle(shuffle_list)
                                     user_ids, values = zip(*shuffle_list)
-                                for j,(user_id,value) in enumerate(zip(user_ids,values)):
+                                for j, (user_id, value) in enumerate(zip(user_ids, values)):
                                     if flag_in[j]:
-                                        self.input_ranking_vectors[i,user_id,(value-1)] = 1
+                                        self.input_ranking_vectors[i, user_id, (value-1)] = 1
                                     else:
                                         self.output_ranking_vectors[i,user_id,(value-1)] = 1
                             elif self.mode == 1:
@@ -129,11 +129,11 @@ class DataSet(keras.callbacks.Callback):
                         outputs = {'nade_loss': np.zeros([self.batch_size])}
                         yield (inputs, outputs)
 
-                if self.shuffle:
-                    iter_cnt += 1
-                    if max_iters != -1:
-                        if iter_cnt == max_iters:
-                            break
+            if self.shuffle:
+                iter_cnt += 1
+                if max_iters != -1:
+                    if iter_cnt == max_iters:
+                        break
 
-                    print('shuffling data...')
-                    random.shuffle(self.flist)
+                print('shuffling data...')
+                random.shuffle(self.flist)

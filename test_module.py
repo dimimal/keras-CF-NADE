@@ -120,13 +120,13 @@ class RMSE_eval(Callback):
             return rmse
 
         def on_epoch_end(self, epoch, logs={}):
-                score = self.eval_rmse()
-                if self.training_set:
-                        print "training set RMSE for epoch %d is %f"%(epoch, score)
-                else:
-                        print "validation set RMSE for epoch %d is %f"%(epoch, score)
+            score = self.eval_rmse()
+            if self.training_set:
+                print("training set RMSE for epoch %d is %f" % (epoch, score))
+            else:
+                print("validation set RMSE for epoch %d is %f" % (epoch, score))
 
-                self.rmses.append(score)
+            self.rmses.append(score)
 
 
 if __name__ == '__main__':
@@ -141,11 +141,9 @@ if __name__ == '__main__':
     alpha = 1.0
     print('Loading data...')
 
-
-
-    train_file_list = sorted(glob.glob(os.path.join(('data/train_set'), 'part*')))
-    val_file_list = sorted(glob.glob(os.path.join(('data/val_set/'), 'part*')))
-    test_file_list = sorted(glob.glob(os.path.join(('data/test_set/'), 'part*')))
+    train_file_list = sorted(glob.glob(os.path.join('data', 'train_set', 'part*')))
+    val_file_list = sorted(glob.glob(os.path.join('data', 'val_set', 'part*')))
+    test_file_list = sorted(glob.glob(os.path.join('data', 'test_set', 'part*')))
     train_file_list = [dfile for dfile in train_file_list if os.stat(dfile).st_size != 0]
     val_file_list = [dfile for dfile in val_file_list if os.stat(dfile).st_size != 0]
     test_file_list = [dfile for dfile in test_file_list if os.stat(dfile).st_size != 0]
@@ -154,28 +152,30 @@ if __name__ == '__main__':
     random.shuffle(test_file_list)
     train_file_list = train_file_list[:max(int(len(train_file_list) * data_sample),1)]
 
-
-
-    train_set = DataSet(train_file_list,
+    train_set = DataSet(
+            train_file_list,
             num_users=num_users,
             num_items=num_items,
             batch_size=batch_size,
             mode=0)
-    val_set = DataSet(val_file_list,
+
+    val_set = DataSet(
+            val_file_list,
             num_users=num_users,
             num_items=num_items,
             batch_size=batch_size,
             mode=1)
-    test_set = DataSet(test_file_list,
+
+    test_set = DataSet(
+            test_file_list,
             num_users=num_users,
             num_items=num_items,
             batch_size=batch_size,
             mode=2)
 
-
-
     rating_freq = np.zeros((6040, 5))
     init_b = np.zeros((6040, 5))
+    print('Generate Validation Set')
     for batch in val_set.generate(max_iters=1):
             inp_r = batch[0]['input_ratings']
             out_r = batch[0]['output_ratings']
@@ -184,8 +184,6 @@ if __name__ == '__main__':
 
             rating_freq += inp_r.sum(axis=0)
 
-
-
     log_rating_freq = np.log(rating_freq + 1e-8)
     log_rating_freq_diff = np.diff(log_rating_freq, axis=1)
     init_b[:, 1:] = log_rating_freq_diff
@@ -193,17 +191,25 @@ if __name__ == '__main__':
 
     new_items = np.where(rating_freq.sum(axis=1) == 0)[0]
 
-    input_layer = Input(shape=(input_dim0,input_dim1),
+    input_layer = Input(
+            shape=(input_dim0, input_dim1),
             name='input_ratings')
-    output_ratings = Input(shape=(input_dim0,input_dim1),
-            name='output_ratings')
-    input_masks = Input(shape=(input_dim0,),
+
+    output_ratings = Input(shape=(
+        input_dim0, input_dim1),
+        name='output_ratings')
+
+    input_masks = Input(
+            shape=(input_dim0,),
             name='input_masks')
-    output_masks = Input(shape=(input_dim0,),
+
+    output_masks = Input(
+            shape=(input_dim0,),
             name='output_masks')
 
     nade_layer = Dropout(0.0)(input_layer)
-    nade_layer = NADE(hidden_dim=hidden_dim,
+    nade_layer = NADE(
+            hidden_dim=hidden_dim,
             activation='tanh',
             bias=True,
             W_regularizer=keras.regularizers.l2(0.02),
@@ -221,25 +227,24 @@ if __name__ == '__main__':
             output_shape=d_output_shape,
             name='d')(input_masks)
 
-
-
     sum_masks = add([input_masks, output_masks])
-    D = Lambda(D_layer,
+    D = Lambda(
+            D_layer,
             output_shape=D_output_shape,
             name='D')(sum_masks)
 
-
-    loss_out = Lambda(rating_cost_lambda_func,
+    loss_out = Lambda(
+            rating_cost_lambda_func,
             output_shape=(1,),
-            name='nade_loss')([nade_layer,output_ratings,input_masks,output_masks,D,d])
+            name='nade_loss')([nade_layer, output_ratings, input_masks, output_masks, D, d])
 
-
-    cf_nade_model = Model(inputs=[input_layer,output_ratings,input_masks,output_masks],
-            outputs=[loss_out,predicted_ratings])
+    cf_nade_model = Model(
+            inputs=[input_layer, output_ratings, input_masks, output_masks],
+            outputs=[loss_out, predicted_ratings])
     cf_nade_model.summary()
 
-
-    adam = Adam(lr=0.001,
+    adam = Adam(
+            lr=0.001,
             beta_1=0.9,
             beta_2=0.999,
             epsilon=1e-8)
@@ -247,14 +252,17 @@ if __name__ == '__main__':
     cf_nade_model.compile(loss={'nade_loss': lambda y_true, y_pred: y_pred},
             optimizer=adam)
 
-    train_rmse_callback = RMSE_eval(data_set=train_set,
+    train_rmse_callback = RMSE_eval(
+            data_set=train_set,
             new_items=new_items,
             training_set=True)
-    val_rmse_callback = RMSE_eval(data_set=val_set,
+
+    val_rmse_callback = RMSE_eval(
+            data_set=val_set,
             new_items=new_items,
             training_set=False)
 
-    print 'Training...'
+    print('Training...')
     cf_nade_model.fit_generator(
             train_set.generate(),
             steps_per_epoch=(train_set.get_corpus_size()//batch_size),
@@ -262,7 +270,7 @@ if __name__ == '__main__':
             validation_data=val_set.generate(),
             validation_steps=(val_set.get_corpus_size()//batch_size),
             shuffle=True,
-            callbacks=[train_set,val_set,train_rmse_callback,val_rmse_callback],
+            callbacks=[train_set, val_set, train_rmse_callback, val_rmse_callback],
             verbose=1)
 
     print('Testing...')
@@ -300,4 +308,5 @@ if __name__ == '__main__':
     total_squared_error = np.array(squared_error).sum()
     total_n_samples = np.array(n_samples).sum()
     rmse = np.sqrt(total_squared_error / (total_n_samples * 1.0 + 1e-8))
+
     print("test set RMSE is %f" % (rmse))
