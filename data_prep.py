@@ -10,7 +10,8 @@ from indexes import create_user_index, create_doc_index, load_indexes, map_recom
 
 current_path = os.path.dirname(__file__)
 # data_path = '/home/alex/Documents/Data/ml-1m/ratings.dat'
-data_path = os.path.join(current_path, 'ml-1m', 'ratings.dat')
+# data_path = os.path.join(current_path, 'ml-1m', 'ratings.dat')
+data_path = os.path.join(current_path, 'ml-1m', 'train.csv')
 
 
 def read_data(sc, data_file, delimiter='::'):
@@ -39,7 +40,7 @@ if __name__ == "__main__":
     sc = SparkContext()
     spark = SparkSession(sc)
 
-    ui_mat_rdd = read_data(sc, data_path, delimiter='::') \
+    ui_mat_rdd = read_data(sc, data_path, delimiter=',') \
             .sample(False,1.0,seed=0) \
             .persist()
 
@@ -102,10 +103,12 @@ if __name__ == "__main__":
     val_examples.show()
     test_examples.show()
 
-
-    train_examples.coalesce(1).write.json(path="data/train_set",
+    train_examples.coalesce(1).write.json(
+            path=os.path.join('data', 'train_set'),
             mode='overwrite')
-    val_examples.coalesce(1).write.json(path="data/val_set",
+    val_examples.coalesce(1).write.json(
+            path=os.path.join('data', 'val_set'),
             mode='overwrite')
-    test_examples.coalesce(1).write.json(path="data/test_set",
+    test_examples.coalesce(1).write.json(
+            path=os.path.join('data', 'test_set'),
             mode='overwrite')

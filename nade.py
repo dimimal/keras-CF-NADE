@@ -4,6 +4,7 @@ import tensorflow as tf
 from keras import initializers
 from keras import regularizers
 from keras import constraints
+from keras import activations
 
 
 def dot_product(x, kernel):
@@ -25,18 +26,18 @@ class NADE(Layer):
     """
     """
 
-    def __init__(self,
-        hidden_dim,
-        activation,
-        W_regularizer=None,
-        V_regularizer=None,
-        b_regularizer=None,
-        c_regularizer=None,
-        bias=False, **kwargs):
+    def __init__(
+            self,
+            hidden_dim,
+            activation,
+            init='uniform',
+            W_regularizer=None,
+            V_regularizer=None,
+            b_regularizer=None,
+            c_regularizer=None,
+            bias=False, **kwargs):
 
-
-        self.init = initializers.get('uniform')
-
+        self.init = initializers.get(init)
 
         self.bias = bias
         self.activation = activation
@@ -49,12 +50,11 @@ class NADE(Layer):
 
         super(NADE, self).__init__(**kwargs)
 
-
     def build(self, input_shape):
         self.input_dim1 = input_shape[1]
         self.input_dim2 = input_shape[2]
 
-        self.W = self.add_weight(shape=(self.input_dim1,self.input_dim2,self.hidden_dim),
+        self.W = self.add_weight(shape=(self.input_dim1, self.input_dim2, self.hidden_dim),
                                  initializer=self.init,
                                  name='{}_W'.format(self.name),
                                  regularizer=self.W_regularizer)
@@ -78,7 +78,6 @@ class NADE(Layer):
         super(NADE, self).build(input_shape)
 
     def call(self, x):
-
         x = K.cumsum(x[:, :, ::-1], axis=2)[:, :, ::-1]
         # x.shape = (?,6040,5)
         # W.shape = (6040, 5, 500)
@@ -105,3 +104,17 @@ class NADE(Layer):
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0], input_shape[1], input_shape[2])
+
+    def get_config(self):
+        config = {
+            'bias': self.bias,
+            'hidden_dim': self.hidden_dim,
+            'init': initializers.serialize(self.init),
+            'activation': self.activation,
+            'W_regularizer': regularizers.serialize(self.W_regularizer),
+            'V_regularizer': regularizers.serialize(self.V_regularizer),
+            'b_regularizer': regularizers.serialize(self.b_regularizer),
+            'c_regularizer': regularizers.serialize(self.c_regularizer)
+        }
+        base_config = super(NADE, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))

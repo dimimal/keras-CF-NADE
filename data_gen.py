@@ -1,6 +1,4 @@
 import numpy as np
-import re
-import os
 import json
 import random
 from itertools import islice
@@ -9,21 +7,19 @@ import keras.callbacks
 
 class DataSet(keras.callbacks.Callback):
     """
-        A datagenerator the feeds data from given files.
+        A datagenerator which feeds data from given files.
     """
     def __init__(
-       self,
-       file_list,
-       num_users,
-       num_items,
-       batch_size,
-       mode,
-       shuffle=True):
+           self,
+           file_list,
+           num_users,
+           num_items,
+           batch_size,
+           mode,
+           shuffle=True):
 
         """
         """
-        print(mode)
-        print(file_list)
         self.flist = file_list
         self.num_users = num_users
         self.num_items = num_items
@@ -33,7 +29,7 @@ class DataSet(keras.callbacks.Callback):
 
     def get_corpus_size(self):
         """
-            Computes and returns the number of samples in the corpus.
+        Computes and returns the number of samples in the corpus.
         """
         line_count = 0
         for dfile in self.flist:
@@ -50,7 +46,6 @@ class DataSet(keras.callbacks.Callback):
         """
         """
         iter_cnt = 0
-        print(self.flist)
         while True:
             for dfile in self.flist:
                 print(dfile)
@@ -104,21 +99,23 @@ class DataSet(keras.callbacks.Callback):
                                     if flag_in[j]:
                                         self.input_ranking_vectors[i, user_id, (value-1)] = 1
                                     else:
-                                        self.output_ranking_vectors[i,user_id,(value-1)] = 1
+                                        self.output_ranking_vectors[i, user_id, (value-1)] = 1
                             elif self.mode == 1:
                                 for j,(user_id,value,flag) in enumerate(zip(user_ids,values,flags)):
                                     if flag == 0:
-                                        self.input_ranking_vectors[i,user_id,(value-1)] = 1
+                                        self.input_ranking_vectors[i, user_id, (value-1)] = 1
                                     else:
-                                        self.output_ranking_vectors[i,user_id,(value-1)] = 1
+                                        print(value)
+                                        print(self.output_ranking_vectors.shape)
+                                        self.output_ranking_vectors[i, user_id, (value-1)] = 1
                             elif self.mode == 2:
-                                for j,(user_id,value,flag) in enumerate(zip(user_ids,values,flags)):
+                                for j,(user_id,value,flag) in enumerate(zip(user_ids, values, flags)):
                                     if flag == 0:
-                                        self.input_ranking_vectors[i,user_id,(value-1)] = 1
+                                        self.input_ranking_vectors[i, user_id, (value-1)] = 1
                                         if flag == 1:
-                                            self.input_ranking_vectors[i,user_id,(value-1)] = 1
+                                            self.input_ranking_vectors[i, user_id, (value-1)] = 1
                                         else:
-                                            self.output_ranking_vectors[i,user_id,(value-1)] = 1
+                                            self.output_ranking_vectors[i, user_id, (value-1)] = 1
 
                         inputs = {
                                 'input_ratings': self.input_ranking_vectors,
@@ -135,5 +132,5 @@ class DataSet(keras.callbacks.Callback):
                     if iter_cnt == max_iters:
                         break
 
-                print('shuffling data...')
+                print('\nshuffling data...')
                 random.shuffle(self.flist)
